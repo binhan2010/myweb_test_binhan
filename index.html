@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWAREAI - Nền tảng trải nghiệm AI an toàn</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Firebase Authentication SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body {
+        background-color: #fce7f3 !important;
+        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .animated-gradient {
+            background-size: 200% 200%;
+            animation: gradient-shift 8s ease infinite;
+        }
+        #chatbot-messages {
+            overflow-y: scroll;
+            scrollbar-width: thin; /* Firefox */
+            scrollbar-color: #a78bfa #f1f5f9;
+        }
+
+        #chatbot-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+        #chatbot-messages::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+        #chatbot-messages::-webkit-scrollbar-thumb {
+            background: #a78bfa;
+            border-radius: 8px;
+        }
+        #chatbot-messages::-webkit-scrollbar-thumb:hover {
+            background: #7c3aed;
+        }
+        
+    </style>
+    <style>
+        
+        .privacy-card {
+            background: #ffffff;
+            padding: 2rem;
+            border: 1px solid #f1f5f9;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+
+        .privacy-textarea {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 1rem;
+            color: #1e293b;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            resize: vertical;
+        }
+
+        .privacy-textarea:focus {
+            outline: none;
+            border-color: #8b5cf6;
+        }
+
+        .privacy-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .privacy-button,
+        .privacy-button-secondary,
+        .privacy-copy-button {
+            padding: 0.75rem 1rem;
+            border: 0;
+            border-radius: 0.875rem;
+            font-size: 0.875rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 150ms ease;
+        }
+
+        .privacy-button {
+            background: #7c3aed;
+            color: #ffffff;
+        }
+
+        .privacy-button:hover {
+            background: #6d28d9;
+        }
+
+        .privacy-button-secondary {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        .privacy-button-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .privacy-copy-button {
+            padding: 0.5rem 0.75rem;
+            background: #f3e8ff;
+            color: #7e22ce;
+            font-size: 0.75rem;
+        }
+
+        .privacy-copy-button:hover {
+            background: #e9d5ff;
+        }
+
+        .privacy-status {
+            min-height: 1.5rem;
+            margin-top: 0.75rem;
+            color: #475569;
+            font-size: 0.875rem;
+        }
+
+        .privacy-note {
+            margin-top: 1.25rem;
+            color: #64748b;
+            font-size: 0.75rem;
+            line-height: 1.6;
+        }
+
+    </style>
+</head>
+<!-- <body class="h-full bg-pink-50 text-slate-800 flex flex-col justify-between selection:bg-pink-500 selection:text-white"> -->
+<body class="h-full bg-pink-100 text-slate-800 flex flex-col justify-between selection:bg-pink-500 selection:text-white"></body>
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-white/80 backdrop-blur-xl border-b border-slate-200/80 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer group" onclick="switchTab('home')">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-pink-500 via-purple-600 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30 group-hover:scale-105 transition-transform duration-300">
+                    <i data-lucide="shield-check" class="w-7 h-7"></i>
+                </div>
+                <div>
+                    <span class="text-2xl font-extrabold bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 bg-clip-text text-transparent">AWAREAI</span>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="hidden md:flex items-center space-x-1 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/60">
+                <button onclick="switchTab('home')" id="nav-home" class="px-4 py-2 rounded-xl text-sm font-semibold transition-all text-purple-700 bg-white shadow-sm">Trang chủ</button>
+                <button onclick="switchTab('community')" id="nav-community" class="px-4 py-2 rounded-xl text-sm font-semibold transition-all text-slate-600 hover:text-purple-600">Cộng đồng</button>
+                <button onclick="switchTab('simulator')" id="nav-simulator" class="px-4 py-2 rounded-xl text-sm font-semibold transition-all text-slate-600 hover:text-purple-600">Mô phỏng rủi ro</button>
+                <button
+                onclick="switchTab('privacy-filter')"
+                id="nav-privacy-filter"
+                class="px-4 py-2 rounded-xl text-sm font-semibold transition-all text-slate-600 hover:text-purple-600">
+                Bộ lọc quyền riêng tư
+            </button>
+                <button onclick="switchTab('prompt-doctor')" id="nav-prompt-doctor" class="px-4 py-2 rounded-xl text-sm font-semibold transition-all text-slate-600 hover:text-purple-600">Bác sĩ Prompt</button>
+            </nav>
+
+            <!-- User Auth Header -->
+            <div class="flex items-center space-x-3" id="auth-header-section">
+                <button onclick="switchTab('profile')" class="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-500 hover:opacity-95 text-white font-extrabold rounded-2xl text-xs shadow-lg shadow-purple-500/30 transition flex items-center">
+                    <i data-lucide="user" class="w-4 h-4 mr-2"></i> Đăng nhập / Đăng ký
+                </button>
+            </div>
+        </div>
+    </header>
+
+
+
+    <!-- Main Container Content Tabs -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- 1. HOME TAB -->
+        <section id="tab-home" class="space-y-10">
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-pink-500 via-purple-600 to-cyan-500 animated-gradient text-white p-8 sm:p-14 shadow-2xl">
+                <div class="max-w-2xl relative z-10 space-y-5">
+                    <span class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold bg-white/20 backdrop-blur-md text-white border border-white/30 shadow-inner">
+                        <i data-lucide="sparkles" class="w-4 h-4 mr-2 text-amber-300"></i> Nền tảng AI Safety Tự Động
+                    </span>
+                    <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight leading-tight">Khám phá & Học tập cùng AI Safety</h1>
+                    <p class="text-purple-100 text-base sm:text-lg leading-relaxed font-medium"></p>
+                    <div class="flex flex-wrap gap-4 pt-2">
+                        <button onclick="switchTab('simulator')" class="px-7 py-3.5 bg-white text-purple-700 font-bold rounded-2xl shadow-xl hover:bg-purple-50 transition-all flex items-center">
+                            <i data-lucide="play-circle" class="w-5 h-5 mr-2 text-pink-500"></i> Tạo tình huống AI ngay
+                        </button>
+                        <button onclick="switchTab('prompt-doctor')" class="px-7 py-3.5 bg-white/10 backdrop-blur-md text-white border border-white/40 font-bold rounded-2xl hover:bg-white/20 transition-all flex items-center">
+                            <i data-lucide="stethoscope" class="w-5 h-5 mr-2 text-cyan-300"></i> Sử dụng Bác sĩ Prompt
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div onclick="switchTab('community')" class="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl hover:shadow-2xl transition-all cursor-pointer group">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-pink-500 to-rose-500 text-white flex items-center justify-center mb-6 shadow-lg shadow-pink-500/30">
+                        <i data-lucide="users" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Cộng đồng AI</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">Chia sẻ kinh nghiệm sử dụng AI an toàn và nhận tổng hợp nội dung bằng AI Assistant.</p>
+                </div>
+
+                <div onclick="switchTab('simulator')" class="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl hover:shadow-2xl transition-all cursor-pointer group">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-500 to-indigo-600 text-white flex items-center justify-center mb-6 shadow-lg shadow-purple-500/30">
+                        <i data-lucide="shield-alert" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Tạo kịch bản Risk Simulator</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">AI tự động đóng vai và sinh tình huống rủi ro thời gian thực cho bạn thực hành xử lý.</p>
+                </div>
+
+                <div onclick="switchTab('prompt-doctor')" class="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl hover:shadow-2xl transition-all cursor-pointer group">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white flex items-center justify-center mb-6 shadow-lg shadow-cyan-500/30">
+                        <i data-lucide="cpu" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Bác sĩ Prompt AI</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">Chẩn đoán lỗi thiếu ngữ cảnh, tính mơ hồ trong prompt và viết lại câu lệnh nâng cao.</p>
+                </div>
+            </div>
+        </section>
+
+
+
+
+
+        <!-- 2. COMMUNITY TAB -->
+        <section id="tab-community" class="hidden space-y-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-r from-purple-900 via-indigo-900 to-blue-900 text-white p-8 rounded-3xl shadow-xl">
+                <div>
+                    <span class="px-3 py-1 bg-pink-500 text-white rounded-full text-xs font-bold uppercase tracking-wider">Không gian thảo luận</span>
+                    <h2 class="text-3xl font-extrabold mt-2">Cộng đồng AWAREAI</h2>                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <button onclick="openCreatePostModal()" class="px-5 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold rounded-2xl shadow-lg flex items-center text-sm">
+                        <i data-lucide="plus-circle" class="w-5 h-5 mr-2"></i> Đăng bài / Chia sẻ
+                    </button>
+                    <button onclick="runCommunityAssistant()" class="px-5 py-3 bg-white/10 backdrop-blur-md text-white border border-white/30 font-bold rounded-2xl flex items-center text-sm">
+                        <i data-lucide="bot" class="w-5 h-5 mr-2 text-cyan-300"></i> AI Assistant Tóm tắt
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <div class="lg:col-span-3 space-y-6">
+                    <div class="flex items-center space-x-3 overflow-x-auto pb-2">
+                        <button onclick="filterFeed('all')" id="filter-all" class="px-4 py-2 rounded-2xl text-sm font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md">Tất cả</button>
+                        <button onclick="filterFeed('experience')" id="filter-experience" class="px-4 py-2 rounded-2xl text-sm font-bold bg-white border border-slate-200 text-slate-600">Trải nghiệm AI</button>
+                        <button onclick="filterFeed('question')" id="filter-question" class="px-4 py-2 rounded-2xl text-sm font-bold bg-white border border-slate-200 text-slate-600">Đặt câu hỏi</button>
+                        <button onclick="filterFeed('safety')" id="filter-safety" class="px-4 py-2 rounded-2xl text-sm font-bold bg-white border border-slate-200 text-slate-600">Mẹo an toàn</button>
+                    </div>
+
+                    <div id="ai-assistant-summary-box" class="hidden bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-pink-500/10 border border-purple-200 p-6 rounded-3xl shadow-sm space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2 text-purple-900 font-bold text-sm">
+                                <i data-lucide="sparkles" class="w-4 h-4 text-purple-600"></i>
+                                <span>AI Community Assistant - Tóm tắt thảo luận</span>
+                            </div>
+                            <button onclick="document.getElementById('ai-assistant-summary-box').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-xs font-semibold">Đóng</button>
+                        </div>
+                        <p id="ai-summary-content" class="text-sm text-slate-700 leading-relaxed font-medium">Đang tóm tắt bài viết...</p>
+                    </div>
+
+                    <div id="community-feed-list" class="space-y-6"></div>
+                </div>
+            </div>
+        </section>
+
+
+
+
+
+        <!-- 3. RISK SIMULATOR TAB-->
+        <section id="tab-simulator" class="hidden space-y-8">
+            <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl text-center max-w-3xl mx-auto space-y-4">
+                <span class="px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full text-xs font-bold shadow-md">Sinh tình huống tự động bằng AI</span>
+                <h2 class="text-3xl font-extrabold text-slate-900">Mô phỏng Rủi ro AI (Risk Experience)</h2>
+    
+            </div>
+
+            <div id="simulator-wizard" class="max-w-3xl mx-auto bg-white rounded-3xl border border-slate-100 shadow-xl p-8 sm:p-10">
+                <!-- Step 1: User-defined topic -->
+                <div id="sim-step-1" class="space-y-6">
+                    <div>
+                        <h3 class="text-xl font-extrabold text-slate-900">
+                            Bước 1: Chọn cách luyện tập
+                        </h3>
+                        <p class="mt-2 text-sm text-slate-500">
+                            Bạn có thể nhập chủ đề để AI tạo tình huống mới hoặc chọn một chủ đề có sẵn.
+                        </p>
+                    </div>
+
+                    <!-- Nhánh tạo tình huống bằng AI -->
+                    <div class="rounded-2xl border border-purple-200 bg-purple-50/60 p-5 space-y-4">
+                        <div>
+                        </div>
+
+                        <textarea
+                            id="sim-topic-input"
+                            rows="3"
+                            class="w-full p-4 rounded-2xl border-2 border-slate-200 text-sm focus:outline-none focus:border-purple-500"
+                            placeholder="Ví dụ: Cách phát hiện nội dung AI bịa đặt trước khi đăng..."
+                        ></textarea>
+
+                        <button
+                            type="button"
+                            onclick="generateAIScenario()"
+                            class="px-6 py-3 bg-purple-600 text-white font-bold rounded-2xl text-sm hover:bg-purple-700 transition"
+                        >Để AI tạo tình huống</button>
+                    </div>
+                    <!-- Nhánh chủ đề và đáp án có sẵn -->
+                    <div class="space-y-3">
+                        <div>
+                            <h4 class="font-bold text-slate-900">Chủ đề có sẵn</h4>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button
+                                type="button"
+                                onclick="startPresetScenario('phishing')"
+                                class="p-4 text-left rounded-2xl border border-slate-200 hover:border-purple-400 hover:bg-purple-50 transition"
+                            >
+                                <span class="block font-bold text-slate-800">Email lừa đảo</span>
+                                <span class="mt-1 block text-xs text-slate-500">
+                                    Xử lý email yêu cầu xác minh tài khoản
+                                </span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onclick="startPresetScenario('personal_data')"
+                                class="p-4 text-left rounded-2xl border border-slate-200 hover:border-purple-400 hover:bg-purple-50 transition"
+                            >
+                                <span class="block font-bold text-slate-800">Dữ liệu cá nhân</span>
+                                <span class="mt-1 block text-xs text-slate-500">
+                                    Bảo vệ thông tin riêng tư khi dùng AI
+                                </span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onclick="startPresetScenario('ai_misinformation')"
+                                class="p-4 text-left rounded-2xl border border-slate-200 hover:border-purple-400 hover:bg-purple-50 transition"
+                            >
+                                <span class="block font-bold text-slate-800">Thông tin AI tạo</span>
+                                <span class="mt-1 block text-xs text-slate-500">
+                                    Kiểm chứng nội dung trước khi chia sẻ
+                                </span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onclick="startPresetScenario('ai_at_work')"
+                                class="p-4 text-left rounded-2xl border border-slate-200 hover:border-purple-400 hover:bg-purple-50 transition"
+                            >
+                                <span class="block font-bold text-slate-800">Dùng AI ở nơi làm việc</span>
+                                <span class="mt-1 block text-xs text-slate-500">
+                                    Tránh đưa tài liệu nội bộ lên công cụ AI
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: AI Loading / Scenario Text -->
+                <div id="sim-step-2" class="hidden space-y-6">
+                    <span class="text-xs font-bold text-purple-700 bg-purple-100 px-3.5 py-1.5 rounded-full" id="sim-domain-badge">Chủ đề</span>
+                    <h3 class="text-xl font-extrabold text-slate-900">Bước 2: Tình huống do AI sinh ngẫu nhiên</h3>
+                    
+                    <div id="sim-loading-scenario" class="p-8 text-center space-y-3 bg-slate-50 rounded-2xl border">
+                        <div class="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-purple-600 text-white animate-spin">
+                            <i data-lucide="loader" class="w-6 h-6"></i>
+                        </div>
+                        <p class="text-xs text-slate-600 font-bold">AI đang tạo ra kịch bản rủi ro độc đáo...</p>
+                    </div>
+
+                    <div class="p-6 bg-slate-50 rounded-2xl border border-slate-200 text-sm leading-relaxed hidden" id="sim-scenario-text"></div>
+                    
+                    <button onclick="proceedToSimulatorStep3()" id="btn-proceed-sim-3" class="px-6 py-3 bg-purple-600 text-white font-bold rounded-2xl text-sm hidden">
+                        Tiếp tục đưa ra quyết định
+                    </button>
+                </div>
+
+                <!-- Step 3: Options -->
+                <div id="sim-step-3" class="hidden space-y-6">
+                    <h3 class="text-xl font-extrabold text-slate-900">Bước 3: Lựa chọn hướng xử lý của bạn</h3>
+                    <div class="space-y-4" id="sim-options-container"></div>
+                </div>
+
+                <!-- Step 4: AI Evaluating Loading -->
+                <div id="sim-step-4" class="hidden space-y-6 text-center py-12">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-purple-600 text-white animate-spin">
+                        <i data-lucide="loader" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-xl font-extrabold text-slate-900">AI đang phân tích & chấm điểm lựa chọn của bạn...</h3>
+                </div>
+
+                <!-- Step 5: Result -->
+                <div id="sim-step-5" class="hidden space-y-6">
+                    <div class="flex justify-between bg-purple-50 p-6 rounded-2xl border border-purple-100">
+                        <div>
+                            <span class="text-xs text-purple-700 font-bold uppercase">Điểm An Toàn</span>
+                            <h4 class="text-3xl font-extrabold text-purple-900" id="sim-result-score">--</h4>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-extrabold text-slate-900 text-sm mb-2">Phân tích rủi ro chi tiết từ AI:</h4>
+                        <div class="p-5 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-slate-800 leading-relaxed font-medium" id="sim-result-analysis"></div>
+                    </div>
+                    <div>
+                        <h4 class="font-extrabold text-slate-900 text-sm mb-2">Lời khuyên của AI:</h4>
+                        <div class="p-5 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-slate-800 leading-relaxed font-medium" id="sim-result-advice"></div>
+                    </div>
+                    <button onclick="resetSimulator()" class="px-6 py-3 bg-purple-600 text-white font-bold rounded-2xl text-sm">Tạo tình huống mới</button>
+                </div>
+            </div>
+        </section>
+
+
+
+        <!-- PRIVACY FILTER TAB -->
+        <section id="tab-privacy-filter" class="hidden space-y-8">
+            <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl text-center max-w-3xl mx-auto space-y-3">
+                <span class="px-4 py-1.5 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-full text-xs font-bold shadow-md">
+                    Kiểm tra ngay trên thiết bị
+                </span>
+                <h2 class="text-3xl font-extrabold text-slate-900">Bộ lọc quyền riêng tư</h2>
+            </div>
+
+            <div class="privacy-card max-w-3xl mx-auto">
+                <label for="privacy-input" class="block font-bold text-slate-900 mb-2">
+                    Văn bản cần kiểm tra
+                </label>
+
+                <textarea
+                    id="privacy-input"
+                    rows="7"
+                    class="privacy-textarea"
+                    placeholder="Dán nội dung vào đây để kiểm tra thông tin riêng tư..."
+                ></textarea>
+
+                <div class="privacy-actions">
+                    <button type="button" onclick="scanPrivateText()" class="privacy-button">
+                        Kiểm tra và che thông tin
+                    </button>
+                    <button type="button" onclick="clearPrivacyFilter()" class="privacy-button-secondary">
+                        Xóa nội dung
+                    </button>
+                </div>
+
+                <p id="privacy-status" class="privacy-status" aria-live="polite"></p>
+
+                <div id="privacy-result-container" class="hidden space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <label for="privacy-result" class="font-bold text-slate-900">
+                            Bản đã che thông tin
+                        </label>
+                        <button
+                            type="button"
+                            onclick="copyPrivacyResult()"
+                            class="privacy-copy-button">
+                            Sao chép bản đã che
+                        </button>
+                    </div>
+
+                    <textarea
+                        id="privacy-result"
+                        rows="7"
+                        class="privacy-textarea"
+                        readonly
+                        aria-label="Văn bản đã che thông tin riêng tư"></textarea>
+                </div>
+
+                <p class="privacy-note">
+                    Bộ lọc tự động có thể bỏ sót thông tin hoặc nhận diện nhầm. Hãy kiểm tra lại
+                    văn bản trước khi chia sẻ. Tên và địa chỉ chưa được tự động nhận diện.
+                </p>
+            </div>
+        </section>
+
+
+
+
+
+
+
+        <!-- 4. PROMPT DOCTOR TAB-->
+        <section id="tab-prompt-doctor" class="hidden space-y-8">
+            <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl text-center max-w-3xl mx-auto space-y-4">
+                <span class="px-4 py-1.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-full text-xs font-bold shadow-md">Đánh giá & Chẩn đoán bởi AI</span>
+                <h2 class="text-3xl font-extrabold text-slate-900">Bác sĩ Prompt</h2>
+            </div>
+
+            <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl space-y-6 flex flex-col justify-between">
+                    <div class="space-y-4">
+                        <label class="block text-sm font-extrabold text-slate-900">Nhập Prompt của bạn:</label>
+                        <textarea id="doctor-input-prompt" rows="6" class="w-full p-4 rounded-2xl border-2 border-slate-200 text-sm focus:outline-none focus:border-cyan-500 custom-scrollbar font-medium" placeholder="Ví dụ: Lập kế hoạch tiếp thị cho cửa hàng quần áo nhỏ..."></textarea>
+                    </div>
+                    <button onclick="runPromptDoctor()" class="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-extrabold rounded-2xl text-sm shadow-xl flex items-center justify-center">
+                        <i data-lucide="stethoscope" class="w-5 h-5 mr-2"></i> Phân tích & Viết lại bằng AI
+                    </button>
+                </div>
+
+                <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl space-y-6">
+                    <h3 class="font-extrabold text-slate-900 text-base">Kết quả chẩn đoán từ AI</h3>
+                    <div class="space-y-3 text-xs font-semibold" id="doctor-criteria-list">
+                        <div class="p-4 bg-slate-50 rounded-2xl border text-slate-400">Vui lòng nhập prompt bên trái để AI tiến hành phân tích...</div>
+                    </div>
+                    <div class="space-y-3 pt-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-extrabold uppercase">Prompt Đã Tối Ưu Tự Động:</span>
+                            <button onclick="copyOptimizedPrompt()" id="copy-prompt-btn" class="text-xs text-purple-600 font-bold hidden bg-purple-50 px-3 py-1 rounded-xl">Sao chép</button>
+                        </div>
+                        <div id="doctor-optimized-output" class="p-5 bg-purple-50/50 rounded-2xl border border-purple-100 text-xs text-slate-400 leading-relaxed font-medium">Nội dung câu lệnh tối ưu hiển thị tại đây...</div>
+                    </div>
+                </div>
+            </div>
+            <div class="max-w-5xl mx-auto w-full bg-white p-6 rounded-3xl border border-slate-100 shadow-xl">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h3 class="text-lg font-extrabold text-slate-900">Nhật ký</h3>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        onclick="clearPromptDoctorHistory()"
+                        class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-slate-200">
+                        Xóa nhật ký
+                    </button>
+                </div>
+
+                <div id="prompt-doctor-history" class="mt-5 space-y-4">
+                    <p class="text-sm text-slate-400">Chưa có nhật ký.</p>
+                </div>
+            </div>
+        </section>
+
+
+
+
+
+        <!-- 5. MY PROFILE TAB-->
+        <section id="tab-profile" class="hidden space-y-8">
+            <div id="profile-logged-out" class="max-w-md mx-auto bg-white p-8 sm:p-10 rounded-3xl border border-slate-100 shadow-2xl space-y-6">
+                <div class="text-center space-y-3">
+                    <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-pink-500 to-purple-600 text-white mx-auto flex items-center justify-center shadow-xl">
+                        <i data-lucide="user" class="w-8 h-8"></i>
+                    </div>
+                    <h2 class="text-2xl font-extrabold text-slate-900" id="auth-form-title">Đăng nhập tài khoản</h2>
+                    <p class="text-xs text-slate-500 font-medium">Đăng nhập an toàn bằng email và mật khẩu hoặc tài khoản Google qua Firebase Authentication.</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="space-y-3 text-xs">
+                        <div id="field-username-container" class="hidden">
+                            <label class="block font-bold text-slate-700 mb-1.5">Tên tài khoản</label>
+                            <input type="text" id="auth-username-input" class="w-full p-3.5 rounded-2xl border-2 border-slate-200 focus:outline-none focus:border-purple-500" placeholder="Nguyễn Văn A">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1.5">Gmail</label>
+                            <input type="email" id="auth-email-input" class="w-full p-3.5 rounded-2xl border-2 border-slate-200 focus:outline-none focus:border-purple-500" placeholder="name@gmail.com">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1.5">Mật khẩu</label>
+                            <input type="password" id="auth-pass-input" class="w-full p-3.5 rounded-2xl border-2 border-slate-200 focus:outline-none focus:border-purple-500" placeholder="••••••••">
+                        </div>
+                    </div>
+
+                    <button onclick="handleLocalAuth()" id="auth-submit-btn" class="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-extrabold rounded-2xl text-xs shadow-xl">Đăng nhập</button>
+                    <button onclick="handleGoogleAuth()" type="button"
+                    class="w-full py-4 bg-white border-2 border-slate-200 text-slate-700
+                        font-extrabold rounded-2xl text-xs hover:bg-slate-50">
+                    <i class="bi bi-google mr-2"></i>
+                    Tiếp tục với Google
+                </button>
+                        <button onclick="toggleAuthMode()" id="auth-toggle-mode-btn" class="text-xs text-purple-600 hover:underline font-bold">Đăng ký ngay</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="profile-logged-in" class="hidden max-w-4xl mx-auto space-y-6">
+                <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl flex items-center justify-between">
+                    <div class="flex items-center space-x-5">
+                        <div class="w-20 h-20 rounded-3xl bg-gradient-to-tr from-pink-500 via-purple-600 to-blue-500 text-white flex items-center justify-center text-3xl font-extrabold" id="profile-avatar-initials">U</div>
+                        <div>
+                            <h2 class="text-2xl font-extrabold text-slate-900" id="profile-display-name">--</h2>
+                            <p class="text-xs text-slate-500" id="profile-display-email">--</p>
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 mt-2">
+                                <i data-lucide="check-circle-2" class="w-3.5 h-3.5 mr-1.5"></i> Đã đăng nhập
+                            </span>
+                        </div>
+                    </div>
+                    <button onclick="handleLogout()" class="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-2xl flex items-center">
+                        <i data-lucide="log-out" class="w-4 h-4 mr-2"></i> Đăng xuất
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+
+
+
+
+  
+    <!-- MINI CHATBOT -->
+    <div class="fixed bottom-6 right-6 z-50">
+        <button
+            onclick="toggleChatbox()"
+            aria-label="Mở chatbot"
+            class="w-14 h-14 rounded-full bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-500 text-white shadow-xl shadow-purple-900/25 flex items-center justify-center hover:scale-105 hover:shadow-2xl transition duration-200">
+            <i data-lucide="bot" class="w-7 h-7"></i>
+        </button>
+
+        <div
+            id="chatbot-window"
+            class="hidden absolute bottom-[72px] right-0 w-[calc(100vw-2rem)] sm:w-[380px] h-[min(560px,calc(100vh-7rem))] bg-white rounded-3xl shadow-2xl shadow-slate-900/20 border border-slate-200/80 flex flex-col overflow-hidden">
+
+            <!-- Tiêu đề -->
+            <div class="shrink-0 px-5 py-4 bg-gradient-to-r from-violet-700 via-purple-600 to-fuchsia-600 text-white flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-white/15 flex items-center justify-center">
+                        <i data-lucide="bot" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm">AWAREAI Chatbot</h4>
+                    </div>
+                </div>
+
+                <button
+                    onclick="toggleChatbox()"
+                    aria-label="Đóng chatbot"
+                    class="w-9 h-9 rounded-xl text-white/80 hover:text-white hover:bg-white/15 flex items-center justify-center transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Tin nhắn: cuộn trong vùng này, không đẩy ô nhập ra ngoài -->
+            <div
+                id="chatbot-messages"
+                class="flex-1 min-h-0 p-4 overflow-y-auto overscroll-contain space-y-4 custom-scrollbar bg-slate-50 text-sm">
+                <div class="flex items-start gap-2.5">
+                    <div class="w-8 h-8 shrink-0 rounded-xl bg-violet-100 text-violet-700 flex items-center justify-center">
+                        <i data-lucide="bot" class="w-4 h-4"></i>
+                    </div>
+                    <div class="max-w-[82%] px-4 py-3 rounded-2xl rounded-tl-md bg-white border border-slate-200 text-slate-700 shadow-sm leading-relaxed">
+                        Xin chào! Tôi là trợ lý AWAREAI. Bạn muốn hỏi gì về bảo mật hoặc cách sử dụng AI?
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thanh nhập luôn nằm dưới cùng -->
+            <div class="shrink-0 p-3 bg-white border-t border-slate-200">
+                <div class="flex items-center gap-2 p-1.5 rounded-2xl border border-slate-200 bg-slate-50 focus-within:border-violet-400 focus-within:ring-2 focus-within:ring-violet-100 transition">
+                    <input
+                        type="text"
+                        id="chatbot-input"
+                        onkeypress="if(event.key==='Enter') sendChatMessage()"
+                        placeholder="Nhập câu hỏi của bạn..."
+                        class="flex-grow min-w-0 px-3 py-2 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none">
+
+                    <button
+                        onclick="sendChatMessage()"
+                        aria-label="Gửi tin nhắn"
+                        class="w-10 h-10 shrink-0 rounded-xl bg-violet-600 hover:bg-violet-700 text-white flex items-center justify-center transition">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CREATE POST MODAL -->
+    <div id="create-post-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-8 space-y-5">
+            <div class="flex justify-between items-center border-b pb-4">
+                <h3 class="font-extrabold text-slate-900 text-lg">Đăng bài viết mới</h3>
+                <button onclick="closeCreatePostModal()"><i data-lucide="x" class="w-6 h-6 text-slate-400"></i></button>
+            </div>
+            <div class="space-y-4 text-xs font-semibold">
+                <div>
+                    <label class="block mb-1.5">Danh mục</label>
+                    <select id="new-post-category" class="w-full p-3.5 rounded-2xl border-2 border-slate-200">
+                        <option value="experience">Trải nghiệm AI</option>
+                        <option value="question">Đặt câu hỏi</option>
+                        <option value="safety">Mẹo an toàn</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block mb-1.5">Tiêu đề</label>
+                    <input type="text" id="new-post-title" class="w-full p-3.5 rounded-2xl border-2 border-slate-200" placeholder="Tiêu đề bài viết...">
+                </div>
+                <div>
+                    <label class="block mb-1.5">Nội dung</label>
+                    <textarea id="new-post-content" rows="4" class="w-full p-3.5 rounded-2xl border-2 border-slate-200" placeholder="Nội dung..."></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 pt-2">
+                <button onclick="closeCreatePostModal()" class="px-5 py-2.5 bg-slate-100 rounded-2xl text-xs font-bold">Hủy</button>
+                <button onclick="submitNewPost()" class="px-5 py-2.5 bg-purple-600 text-white rounded-2xl text-xs font-bold">Đăng bài</button>
+            </div>
+        </div>
+    </div>
+        <script src="config.js"></script>
+        <script src="js/auth.js"></script>
+        <script src="js/chatbot.js"></script>
+        <script src="js/community.js"></script>
+        <script src="js/groq-api.js"></script>
+        <script src="js/init.js"></script>
+        <script src="js/nav_bar.js"></script>
+        <script src="js/nav_bar.js"></script>
+        <script src="js/prompt_doc.js"></script>
+        <script src="js/risk_simulator.js"></script>
+</body>
+<footer class="mt-auto border-t border-purple-700 bg-purple-800 text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+
+            <!-- Giới thiệu -->
+            <div>
+                <a href="#" onclick="switchTab('home'); return false;"
+                   class="inline-flex items-center gap-3">
+                    <span class="flex h-11 w-11 items-center justify-center rounded-2xl
+                                 bg-gradient-to-tr from-pink-500 via-purple-600 to-cyan-500
+                                 text-white shadow-lg">
+                        <i class="bi bi-shield-check text-2xl"></i>
+                    </span>
+                    <span class="text-xl font-extrabold text-white">AWAREAI</span>
+                </a>
+                <p class="mt-4 max-w-sm text-sm leading-6 text-purple-100">
+                    Cùng học tập và trải nghiệm AI an toàn, có trách nhiệm.
+                </p>
+            </div>
+
+            <!-- Ứng dụng -->
+            <div>
+                <h2 class="text-sm font-bold uppercase tracking-wider text-white">
+                    Ứng dụng
+                </h2>
+                <ul class="mt-4 space-y-3 text-sm">
+                    <li>
+                        <button onclick="switchTab('community')"
+                                class="flex items-center gap-2 text-purple-100 hover:text-white">
+                            <i class="bi bi-people"></i>
+                            Cộng đồng AI
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="switchTab('simulator')"
+                                class="flex items-center gap-2 text-purple-100 hover:text-white">
+                            <i class="bi bi-shield-exclamation"></i>
+                            Mô phỏng rủi ro
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="switchTab('prompt-doctor')"
+                                class="flex items-center gap-2 text-purple-100 hover:text-white">
+                            <i class="bi bi-robot"></i>
+                            Bác sĩ Prompt
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Liên hệ -->
+            <div>
+                <h2 class="text-sm font-bold uppercase tracking-wider text-white">
+                    Liên hệ
+                </h2>
+                <ul class="mt-4 space-y-3 text-sm text-purple-100">
+                    <li>
+                        <a href="mailto:contact@awareai.vn"
+                           class="flex items-center gap-2 hover:text-white">
+                            <i class="bi bi-envelope"></i>
+                            ngan06012010@gmail.com.vn
+                        </a>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <i class="bi bi-geo-alt"></i>
+                        Việt Nam
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Kết nối -->
+            <div>
+                <h2 class="text-sm font-bold uppercase tracking-wider text-white">
+                    Kết nối
+                </h2>
+                <div class="mt-4 flex gap-3">
+                    <a href="https://www.facebook.com/?locale=vi_VN"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       aria-label="Facebook"
+                       class="flex h-10 w-10 items-center justify-center rounded-xl
+                              bg-white/10 text-white hover:bg-purple-600">
+                        <i class="bi bi-facebook text-lg"></i>
+                    </a>
+                    <a href="https://www.youtube.com/"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       aria-label="YouTube"
+                       class="flex h-10 w-10 items-center justify-center rounded-xl
+                              bg-white/10 text-white hover:bg-purple-600">
+                        <i class="bi bi-youtube text-lg"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 border-t border-purple-600 pt-5 text-center text-xs text-purple-200">
+            © <span id="awareai-footer-year"></span> AWAREAI
+        </div>
+    </div>
+</footer>
+
+<script>
+    document.getElementById('awareai-footer-year').textContent =
+        new Date().getFullYear();
+</script>
+</html>
